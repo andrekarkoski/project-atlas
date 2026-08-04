@@ -1,0 +1,5 @@
+name: project_atlas
+
+packages:
+  - apps/**
+  - packages/**
