@@ -1,0 +1,15 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
