@@ -1,0 +1,25 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+
+# Flutter generated files
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# IDEs
+.idea/
+.vscode/
+
+# Android
+**/android/.gradle/
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
