@@ -172,5 +172,228 @@ void main() {
         'S',
       );
     });
+
+    test('stores word placement', () {
+      const size = BoardSize(
+        rows: 10,
+        columns: 10,
+      );
+
+      final board = Board(size: size);
+
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 3),
+        direction: Direction.right,
+      );
+
+      final updated = board.placeWord(placement);
+
+      expect(updated.placements, contains(placement));
+    });
+
+    test('returns expected letter for a horizontal word placement', () {
+      const size = BoardSize(
+        rows: 10,
+        columns: 10,
+      );
+
+      final board = Board(size: size);
+
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 3),
+        direction: Direction.right,
+      );
+
+      final updated = board.placeWord(placement);
+
+      expect(updated.expectedLetterAt(Position(2, 3)), 'A');
+      expect(updated.expectedLetterAt(Position(2, 4)), 'T');
+      expect(updated.expectedLetterAt(Position(2, 5)), 'L');
+      expect(updated.expectedLetterAt(Position(2, 6)), 'A');
+      expect(updated.expectedLetterAt(Position(2, 7)), 'S');
+    });
+
+    test('returns expected letter for a vertical word placement', () {
+      const size = BoardSize(
+        rows: 10,
+        columns: 10,
+      );
+
+      final board = Board(size: size);
+
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 3),
+        direction: Direction.down,
+      );
+
+      final updated = board.placeWord(placement);
+
+      expect(updated.expectedLetterAt(Position(2, 3)), 'A');
+      expect(updated.expectedLetterAt(Position(3, 3)), 'T');
+      expect(updated.expectedLetterAt(Position(4, 3)), 'L');
+      expect(updated.expectedLetterAt(Position(5, 3)), 'A');
+      expect(updated.expectedLetterAt(Position(6, 3)), 'S');
+    });
+
+    test('returns the same expected letter at a word intersection', () {
+      const size = BoardSize(
+        rows: 10,
+        columns: 10,
+      );
+
+      final board = Board(size: size);
+
+      const horizontal = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(4, 2),
+        direction: Direction.right,
+      );
+
+      const vertical = WordPlacement(
+        word: Word('LASER'),
+        position: Position(4, 4),
+        direction: Direction.down,
+      );
+
+      final updated = board
+          .placeWord(horizontal)
+          .placeWord(vertical);
+
+      expect(updated.expectedLetterAt(Position(4, 4)), 'L');
+    });
+
+    test('does not allow a word placement with conflicting letters', () {
+      const size = BoardSize(
+        rows: 10,
+        columns: 10,
+      );
+
+      final board = Board(size: size);
+
+      const firstPlacement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(4, 2),
+        direction: Direction.right,
+      );
+
+      final updated = board.placeWord(firstPlacement);
+
+      const conflictingPlacement = WordPlacement(
+        word: Word('LUA'),
+        position: Position(3, 4),
+        direction: Direction.down,
+      );
+
+      expect(
+        () => updated.placeWord(conflictingPlacement),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('returns word placements that contain a position', () {
+      const size = BoardSize(
+        rows: 10,
+        columns: 10,
+      );
+
+      final board = Board(size: size);
+
+      const horizontal = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(4, 2),
+        direction: Direction.right,
+      );
+
+      const vertical = WordPlacement(
+        word: Word('LASER'),
+        position: Position(4, 4),
+        direction: Direction.down,
+      );
+
+      final updated = board
+          .placeWord(horizontal)
+          .placeWord(vertical);
+
+      final result = updated.placementsAt(Position(4, 4));
+
+      expect(result, contains(horizontal));
+      expect(result, contains(vertical));
+      expect(result.length, 2);
+    });
+
+    test('locks cells when a word is completed', () {
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      for (var i = 0; i < placement.word.length; i++) {
+        final position = placement.positionOf(i);
+
+        board = board.setCell(
+          Cell(
+            position: position,
+            letter: placement.word.text[i],
+            state: CellState.filled,
+          ),
+        );
+      }
+
+      final lockedBoard = board.lockCompletedWords();
+
+      for (var i = 0; i < placement.word.length; i++) {
+        final position = placement.positionOf(i);
+        final cell = lockedBoard.cellAt(position);
+
+        expect(cell.state, CellState.locked);
+        expect(cell.isLocked, isTrue);
+      }
+    });
+
+    test('does not lock cells when a word is incomplete', () {
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      for (var i = 0; i < 4; i++) {
+        final position = placement.positionOf(i);
+
+        board = board.setCell(
+          Cell(
+            position: position,
+            letter: placement.word.text[i],
+            state: CellState.filled,
+          ),
+        );
+      }
+
+      final result = board.lockCompletedWords();
+
+      for (var i = 0; i < 4; i++) {
+        final position = placement.positionOf(i);
+
+        expect(result.cellAt(position).state, CellState.filled);
+        expect(result.cellAt(position).isLocked, isFalse);
+      }
+    });
+
+    ///
+
   });
 }

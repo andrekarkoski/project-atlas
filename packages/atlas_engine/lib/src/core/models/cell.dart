@@ -31,6 +31,9 @@ final class Cell {
   /// Returns true when the cell is blocked.
   bool get isBlocked => state == CellState.blocked;
 
+  /// Returns true when the cell is locked.
+  bool get isLocked => state == CellState.locked;
+
   static const Object _noLetterChange = Object();
 
   /// Creates a copy replacing only supplied values.

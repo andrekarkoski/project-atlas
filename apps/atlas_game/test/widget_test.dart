@@ -63,35 +63,65 @@ void main() {
     (tester) async {
       await tester.pumpWidget(const AtlasGameApp());
 
-      // Seleciona a primeira célula.
-      final firstCell = find.byType(GestureDetector).first;
+      const firstCellKey = ValueKey('cell-0-0');
+      const secondCellKey = ValueKey('cell-0-1');
 
+      final firstCell = find.byKey(firstCellKey);
+
+      expect(firstCell, findsOneWidget);
+
+      // Seleciona a primeira célula.
       await tester.tap(firstCell);
       await tester.pump();
 
-      // Coloca a letra A.
-      await tester.tap(find.widgetWithText(ElevatedButton, 'A'));
-      await tester.pump();
-
-      // A letra foi colocada.
-      expect(find.text('A'), findsAtLeastNWidgets(1));
-
-      // A primeira célula não deve mais estar selecionada.
-      final amberCells = find.byWidgetPredicate((widget) {
+      // A primeira célula deve estar selecionada.
+      final firstSelected = find.byWidgetPredicate((widget) {
         if (widget is! Container) {
           return false;
         }
 
         final decoration = widget.decoration;
 
-        if (decoration is! BoxDecoration) {
+        return decoration is BoxDecoration &&
+            decoration.color == Colors.amber &&
+            widget.key == firstCellKey;
+      });
+
+      expect(firstSelected, findsOneWidget);
+
+      // Coloca a letra A.
+      await tester.tap(find.widgetWithText(ElevatedButton, 'A'));
+      await tester.pump();
+
+      // A seleção deve ter avançado para a próxima célula.
+      final secondSelected = find.byWidgetPredicate((widget) {
+        if (widget is! Container) {
           return false;
         }
 
-        return decoration.color == Colors.amber;
+        final decoration = widget.decoration;
+
+        return decoration is BoxDecoration &&
+            decoration.color == Colors.amber &&
+            widget.key == secondCellKey;
       });
 
-      expect(amberCells, findsOneWidget);
+      expect(secondSelected, findsOneWidget);
+
+      // A primeira célula não deve mais estar selecionada.
+      final firstStillSelected = find.byWidgetPredicate((widget) {
+        if (widget is! Container) {
+          return false;
+        }
+
+        final decoration = widget.decoration;
+
+        return decoration is BoxDecoration &&
+            decoration.color == Colors.amber &&
+            widget.key == firstCellKey;
+      });
+
+      expect(firstStillSelected, findsNothing);
     },
   );
 

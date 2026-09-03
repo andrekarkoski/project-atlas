@@ -60,8 +60,8 @@ void main() {
 
     final twoCrossingsBoard = board.placeWord(
       const WordPlacement(
-        word: Word('CROSS'),
-        position: Position(0, 4),
+        word: Word('LASER'),
+        position: Position(2, 4),
         direction: Direction.down,
       ),
     );
@@ -97,13 +97,13 @@ void main() {
         .placeWord(
           const WordPlacement(
             word: Word('LASER'),
-            position: Position(5, 7),
+            position: Position(7, 7),
             direction: Direction.down,
           ),
         );
 
     const oneCrossing = WordPlacement(
-      word: Word('START'),
+      word: Word('ATLAS'),
       position: Position(7, 7),
       direction: Direction.right,
     );

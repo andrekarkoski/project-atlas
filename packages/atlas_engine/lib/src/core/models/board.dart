@@ -11,6 +11,7 @@ final class Board {
   /// Creates a new empty board.
   Board({
     required this.size,
+    this.placements = const [],
   }) : cells = List.generate(
           size.totalCells,
           (index) {
@@ -27,6 +28,7 @@ final class Board {
   const Board._({
     required this.size,
     required this.cells,
+    required this.placements,
   });
 
   /// Board dimensions.
@@ -34,6 +36,7 @@ final class Board {
 
   /// Cells stored in row-major order.
   final List<Cell> cells;
+  final List<WordPlacement> placements;
 
   /// Returns only cells that already contain letters.
   Iterable<Cell> get filledCells sync* {
@@ -63,6 +66,35 @@ final class Board {
   /// Allows board[position] syntax.
   Cell operator [](Position position) {
     return cellAt(position);
+    
+  }
+
+  /// Returns the letter expected at the given position.
+  ///
+  /// Returns null when no word placement covers the position.
+  String? expectedLetterAt(Position position) {
+    for (final placement in placements) {
+      for (var i = 0; i < placement.word.length; i++) {
+        if (placement.positionOf(i) == position) {
+          return placement.word.text[i];
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// Returns all word placements that contain the given position.
+  List<WordPlacement> placementsAt(Position position) {
+    return placements.where((placement) {
+      for (var i = 0; i < placement.word.length; i++) {
+        if (placement.positionOf(i) == position) {
+          return true;
+        }
+      }
+
+      return false;
+    }).toList();
   }
 
   /// Calculates the internal list index.
@@ -74,10 +106,12 @@ final class Board {
   Board copyWith({
     BoardSize? size,
     List<Cell>? cells,
+    List<WordPlacement>? placements,
   }) {
     return Board._(
       size: size ?? this.size,
       cells: cells ?? this.cells,
+      placements: placements ?? this.placements,
     );
   }
 
@@ -93,7 +127,28 @@ final class Board {
   }
 
   /// Places an entire word on the board.
+  /// Places an entire word on the board.
   Board placeWord(WordPlacement placement) {
+    for (var i = 0; i < placement.word.length; i++) {
+      final position = placement.positionOf(i);
+
+      if (!contains(position)) {
+        throw StateError(
+          'Word placement is outside board bounds.',
+        );
+      }
+
+      final currentCell = cellAt(position);
+      final expectedLetter = placement.word.text[i];
+
+      if (currentCell.hasLetter &&
+          currentCell.letter != expectedLetter) {
+        throw StateError(
+          'Word placement conflicts at $position.',
+        );
+      }
+    }
+
     var result = this;
 
     for (var i = 0; i < placement.word.length; i++) {
@@ -106,6 +161,46 @@ final class Board {
       );
 
       result = result.setCell(cell);
+    }
+
+    return result.copyWith(
+      placements: [
+        ...result.placements,
+        placement,
+      ],
+    );
+  }
+
+  Board lockCompletedWords() {
+    var result = this;
+
+    for (final placement in placements) {
+      
+      var wordIsComplete = true;
+
+      for (var i = 0; i < placement.word.length; i++) {
+        final position = placement.positionOf(i);
+        final cell = result.cellAt(position);
+
+        if (!cell.hasLetter ||
+            cell.letter != placement.word.text[i]) {
+          wordIsComplete = false;
+          break;
+        }
+      }
+
+      if (!wordIsComplete) {
+        continue;
+      }
+
+      for (var i = 0; i < placement.word.length; i++) {
+        final position = placement.positionOf(i);
+        final cell = result.cellAt(position);
+
+        result = result.setCell(
+          cell.copyWith(state: CellState.locked),
+        );
+      }
     }
 
     return result;

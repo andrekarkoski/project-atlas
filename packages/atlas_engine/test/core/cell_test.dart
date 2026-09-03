@@ -27,6 +27,30 @@ void main() {
       expect(cell.isBlocked, isFalse);
     });
 
+    test('creates a locked cell', () {
+      const cell = Cell(
+        position: Position(2, 3),
+        letter: 'A',
+        state: CellState.locked,
+      );
+
+      expect(cell.state, CellState.locked);
+      expect(cell.hasLetter, isTrue);
+      expect(cell.isBlocked, isFalse);
+    });
+
+    test('locked cell reports correct state', () {
+      const cell = Cell(
+        position: Position(2, 3),
+        letter: 'A',
+        state: CellState.locked,
+      );
+
+      expect(cell.isLocked, isTrue);
+      expect(cell.isFilled, isFalse);
+      expect(cell.isBlocked, isFalse);
+    });
+
     test('copyWith replaces values', () {
       const original = Cell(
         position: Position(0, 0),
@@ -70,4 +94,6 @@ void main() {
       expect(cell.isFilled, isFalse);
     });
   });
+
+  ///
 }

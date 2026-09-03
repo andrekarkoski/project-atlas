@@ -4,30 +4,10 @@ final class GameController {
   const GameController({
     this.validator = const LetterMoveValidator(),
     this.applier = const LetterMoveApplier(),
-    this.scorer = const LetterMoveScorer(),
   });
 
   final LetterMoveValidator validator;
   final LetterMoveApplier applier;
-  final LetterMoveScorer scorer;
-
-  Board applyLetterMove(
-    Board board,
-    LetterMove move,
-  ) {
-    if (!validator.isValid(board, move)) {
-      return board;
-    }
-
-    return applier.apply(board, move);
-  }
-
-  int scoreLetterMove(
-    Board board,
-    LetterMove move,
-  ) {
-    return scorer.score(board, move);
-  }
 
   Board createInitialBoard() {
     const generator = CrosswordGenerator();
@@ -40,6 +20,17 @@ final class GameController {
       Word('LETRA'),
       Word('REDE'),
     ]);
+  }
+
+  Board applyLetterMove(
+    Board board,
+    LetterMove move,
+  ) {
+    if (!validator.isValid(board, move)) {
+      return board;
+    }
+
+    return applier.apply(board, move);
   }
 
   Board placeLetter(Board board, Position position, String letter) {
@@ -94,6 +85,4 @@ final class GameController {
 
     return null;
   }
-
-  /// Fim
 }
