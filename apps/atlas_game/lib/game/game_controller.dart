@@ -95,5 +95,21 @@ final class GameController {
     return null;
   }
 
+  GameTurn applyMove(
+    Board board,
+    GameTurn turn,
+    LetterMove move,
+  ) {
+    if (!validator.isValid(board, move)) {
+      return turn;
+    }
+
+    applier.apply(board, move);
+
+    return turn
+        .removeLetter(move.letter)
+        .addMove(move);
+  }
+
   /// Fim
 }

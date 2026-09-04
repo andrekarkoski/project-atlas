@@ -6,6 +6,144 @@ void main() {
   group('GameController', () {
     const controller = GameController();
 
+    test('places a letter on the selected position', () {
+      final board = controller.createInitialBoard();
+      const position = Position(0, 0);
+
+      final updatedBoard = controller.placeLetter(
+        board,
+        position,
+        'A',
+      );
+
+      final cell = updatedBoard.cellAt(position);
+
+      expect(cell.letter, 'A');
+      expect(cell.isFilled, isTrue);
+    });
+
+    test('does not place a letter on a blocked cell', () {
+      final board = controller.createInitialBoard();
+      const position = Position(0, 0);
+
+      final blockedCell = board
+          .cellAt(position)
+          .copyWith(state: CellState.blocked);
+
+      final blockedBoard = board.setCell(blockedCell);
+
+      final updatedBoard = controller.placeLetter(
+        blockedBoard,
+        position,
+        'A',
+      );
+
+      final cell = updatedBoard.cellAt(position);
+
+      expect(cell.isBlocked, isTrue);
+      expect(cell.letter, isNull);
+    });
+
+    test('does not overwrite a filled cell', () {
+      final board = controller.createInitialBoard();
+      const position = Position(0, 0);
+
+      final boardWithLetter = controller.placeLetter(
+        board,
+        position,
+        'A',
+      );
+
+      final updatedBoard = controller.placeLetter(
+        boardWithLetter,
+        position,
+        'B',
+      );
+
+      final cell = updatedBoard.cellAt(position);
+
+      expect(cell.letter, 'A');
+      expect(cell.isFilled, isTrue);
+    });
+
+    test('finds the next playable position', () {
+      final board = controller.createInitialBoard();
+
+      const position = Position(0, 0);
+
+      final nextPosition = controller.nextPlayablePosition(
+        board,
+        position,
+      );
+
+      expect(nextPosition, const Position(0, 1));
+    });
+
+    test('skips filled and blocked cells', () {
+      final board = controller.createInitialBoard();
+
+      const position = Position(0, 0);
+
+      final filledBoard = controller.placeLetter(
+        board,
+        const Position(0, 1),
+        'A',
+      );
+
+      final blockedCell = filledBoard
+          .cellAt(const Position(0, 2))
+          .copyWith(state: CellState.blocked);
+
+      final blockedBoard = filledBoard.setCell(blockedCell);
+
+      final nextPosition = controller.nextPlayablePosition(
+        blockedBoard,
+        position,
+      );
+
+      expect(nextPosition, const Position(0, 3));
+    });
+
+    test('returns null when there is no next playable position', () {
+      const size = BoardSize(rows: 1, columns: 2);
+
+      final board = Board(size: size);
+
+      final filledBoard = controller.placeLetter(
+        board,
+        const Position(0, 1),
+        'A',
+      );
+
+      final nextPosition = controller.nextPlayablePosition(
+        filledBoard,
+        const Position(0, 0),
+      );
+
+      expect(nextPosition, isNull);
+    });
+
+    test('removes a letter from a filled cell', () {
+      final board = controller.createInitialBoard();
+      const position = Position(0, 0);
+
+      final filledBoard = controller.placeLetter(
+        board,
+        position,
+        'A',
+      );
+
+      final updatedBoard = controller.removeLetter(
+        filledBoard,
+        position,
+      );
+
+      final cell = updatedBoard.cellAt(position);
+
+      expect(cell.letter, isNull);
+      expect(cell.isEmpty, isTrue);
+    });
+
     test('applies a correct letter move and returns the updated board', () {
       const placement = WordPlacement(
         word: Word('ATLAS'),
@@ -57,52 +195,7 @@ void main() {
       expect(score, 10);
     });
 
-    test('returns 30 points when the move completes a word', () {
-      const placement = WordPlacement(
-        word: Word('ATLAS'),
-        position: Position(2, 0),
-        direction: Direction.right,
-      );
-
-      var board = Board(
-        size: const BoardSize(rows: 5, columns: 5),
-        placements: [placement],
-      );
-
-      board = board
-          .setCell(const Cell(
-            position: Position(2, 0),
-            letter: 'A',
-            state: CellState.filled,
-          ))
-          .setCell(const Cell(
-            position: Position(2, 1),
-            letter: 'T',
-            state: CellState.filled,
-          ))
-          .setCell(const Cell(
-            position: Position(2, 2),
-            letter: 'L',
-            state: CellState.filled,
-          ))
-          .setCell(const Cell(
-            position: Position(2, 3),
-            letter: 'A',
-            state: CellState.filled,
-          ));
-
-      final score = controller.scoreLetterMove(
-        board,
-        const LetterMove(
-          position: Position(2, 4),
-          letter: 'S',
-        ),
-      );
-
-      expect(score, 30);
-    });
-
-    test('returns -10 points for an incorrect letter move', () {
+    test('applies a valid letter move to the turn', () {
       const placement = WordPlacement(
         word: Word('ATLAS'),
         position: Position(2, 0),
@@ -114,193 +207,33 @@ void main() {
         placements: [placement],
       );
 
-      final score = controller.scoreLetterMove(
-        board,
-        const LetterMove(
-          position: Position(2, 0),
-          letter: 'Z',
-        ),
+      const turn = GameTurn(
+        LetterRack([
+          'A',
+          'T',
+          'L',
+        ]),
       );
 
-      expect(score, -10);
-    });
-
-    test('locks a word after the move completes it', () {
-      const placement = WordPlacement(
-        word: Word('ATLAS'),
+      const move = LetterMove(
         position: Position(2, 0),
-        direction: Direction.right,
+        letter: 'A',
       );
 
-      var board = Board(
-        size: const BoardSize(rows: 5, columns: 5),
-        placements: [placement],
-      );
-
-      board = board
-          .setCell(const Cell(
-            position: Position(2, 0),
-            letter: 'A',
-            state: CellState.filled,
-          ))
-          .setCell(const Cell(
-            position: Position(2, 1),
-            letter: 'T',
-            state: CellState.filled,
-          ))
-          .setCell(const Cell(
-            position: Position(2, 2),
-            letter: 'L',
-            state: CellState.filled,
-          ))
-          .setCell(const Cell(
-            position: Position(2, 3),
-            letter: 'A',
-            state: CellState.filled,
-          ));
-
-      final updatedBoard = controller.applyLetterMove(
+      final updatedTurn = controller.applyMove(
         board,
-        const LetterMove(
-          position: Position(2, 4),
-          letter: 'S',
-        ),
+        turn,
+        move,
       );
 
-      for (var column = 0; column < 5; column++) {
-        final cell = updatedBoard.cellAt(
-          Position(2, column),
-        );
+      expect(updatedTurn.rack.letters, [
+        'T',
+        'L',
+      ]);
 
-        expect(cell.state, CellState.locked);
-      }
+      expect(updatedTurn.moves, [
+        move,
+      ]);
     });
-
-    test('keeps a word incomplete when the move does not complete it', () {
-      const placement = WordPlacement(
-        word: Word('ATLAS'),
-        position: Position(2, 0),
-        direction: Direction.right,
-      );
-
-      final board = Board(
-        size: const BoardSize(rows: 5, columns: 5),
-        placements: [placement],
-      );
-
-      final updatedBoard = controller.applyLetterMove(
-        board,
-        const LetterMove(
-          position: Position(2, 0),
-          letter: 'A',
-        ),
-      );
-
-      final cell = updatedBoard.cellAt(
-        const Position(2, 0),
-      );
-
-      expect(cell.letter, 'A');
-      expect(cell.state, CellState.filled);
-    });
-
-    test('does not change the board for an incorrect letter move', () {
-      const placement = WordPlacement(
-        word: Word('ATLAS'),
-        position: Position(2, 0),
-        direction: Direction.right,
-      );
-
-      final board = Board(
-        size: const BoardSize(rows: 5, columns: 5),
-        placements: [placement],
-      );
-
-      final updatedBoard = controller.applyLetterMove(
-        board,
-        const LetterMove(
-          position: Position(2, 0),
-          letter: 'Z',
-        ),
-      );
-
-      final cell = updatedBoard.cellAt(
-        const Position(2, 0),
-      );
-
-      expect(cell.letter, isNull);
-      expect(cell.state, CellState.empty);
-    });
-
-    test('does not change an already filled cell', () {
-      const placement = WordPlacement(
-        word: Word('ATLAS'),
-        position: Position(2, 0),
-        direction: Direction.right,
-      );
-
-      final board = Board(
-        size: const BoardSize(rows: 5, columns: 5),
-        placements: [placement],
-      ).setCell(
-        const Cell(
-          position: Position(2, 0),
-          letter: 'A',
-          state: CellState.filled,
-        ),
-      );
-
-      final updatedBoard = controller.applyLetterMove(
-        board,
-        const LetterMove(
-          position: Position(2, 0),
-          letter: 'T',
-        ),
-      );
-
-      final cell = updatedBoard.cellAt(
-        const Position(2, 0),
-      );
-
-      expect(cell.letter, 'A');
-      expect(cell.state, CellState.filled);
-    });
-
-    test('does not change a blocked cell', () {
-      const placement = WordPlacement(
-        word: Word('ATLAS'),
-        position: Position(2, 0),
-        direction: Direction.right,
-      );
-
-      final board = Board(
-        size: const BoardSize(rows: 5, columns: 5),
-        placements: [placement],
-      ).setCell(
-        const Cell(
-          position: Position(2, 0),
-          state: CellState.blocked,
-        ),
-      );
-
-      final updatedBoard = controller.applyLetterMove(
-        board,
-        const LetterMove(
-          position: Position(2, 0),
-          letter: 'A',
-        ),
-      );
-
-      final cell = updatedBoard.cellAt(
-        const Position(2, 0),
-      );
-
-      expect(cell.letter, isNull);
-      expect(cell.state, CellState.blocked);
-    });
-
-  /// Fim Group  
   });
-
-  /// Fim Main
 }

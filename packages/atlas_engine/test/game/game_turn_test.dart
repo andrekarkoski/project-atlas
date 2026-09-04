@@ -131,6 +131,98 @@ void main() {
         ]);
     });
 
+    test('removes a letter from the rack', () {
+      const rack = LetterRack([
+        'Z',
+        'R',
+        'T',
+        'L',
+        'A',
+      ]);
+
+      const turn = GameTurn(rack);
+
+      final updatedTurn = turn.removeLetter('A');
+
+      expect(updatedTurn.rack.letters, [
+        'Z',
+        'R',
+        'T',
+        'L',
+      ]);
+    });
+
+    test('keeps the turn unchanged when removing an unavailable letter', () {
+      const rack = LetterRack([
+        'Z',
+        'R',
+        'T',
+        'L',
+        'A',
+      ]);
+
+      const turn = GameTurn(
+        rack,
+        score: 20,
+      );
+
+      final updatedTurn = turn.removeLetter('X');
+
+      expect(updatedTurn.rack.letters, [
+        'Z',
+        'R',
+        'T',
+        'L',
+        'A',
+      ]);
+
+      expect(updatedTurn.score, 20);
+    });
+
+
+    test('stores a letter move made during the turn', () {
+      const rack = LetterRack([
+        'A',
+        'T',
+        'L',
+      ]);
+
+      const turn = GameTurn(rack);
+
+      const move = LetterMove(
+        position: Position(2, 3),
+        letter: 'A',
+      );
+
+      final updatedTurn = turn.addMove(move);
+
+      expect(updatedTurn.moves, [
+        move,
+      ]);
+    });
+
+    test('keeps the original turn unchanged when adding a move', () {
+      const rack = LetterRack([
+        'A',
+        'T',
+        'L',
+      ]);
+
+      const turn = GameTurn(rack);
+
+      const move = LetterMove(
+        position: Position(2, 3),
+        letter: 'A',
+      );
+
+      final updatedTurn = turn.addMove(move);
+
+      expect(turn.moves, isEmpty);
+      expect(updatedTurn.moves, [
+        move,
+      ]);
+    });
+
   /// Fim do Group 
   });
 }
