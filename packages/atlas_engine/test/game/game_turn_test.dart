@@ -223,6 +223,62 @@ void main() {
       ]);
     });
 
+    test('GameTurn stores its owner', () {
+      const playerTurn = GameTurn(
+        LetterRack(['A']),
+        owner: TurnOwner.player,
+      );
+
+      const robotTurn = GameTurn(
+        LetterRack(['B']),
+        owner: TurnOwner.robot,
+      );
+
+      expect(playerTurn.owner, TurnOwner.player);
+      expect(robotTurn.owner, TurnOwner.robot);
+    });
+
+    test('GameTurn switches to the other owner', () {
+      const playerTurn = GameTurn(
+        LetterRack(['A']),
+        owner: TurnOwner.player,
+      );
+
+      const robotTurn = GameTurn(
+        LetterRack(['B']),
+        owner: TurnOwner.robot,
+      );
+
+      expect(playerTurn.nextOwner, TurnOwner.robot);
+      expect(robotTurn.nextOwner, TurnOwner.player);
+    });
+
+    test('nextTurn preserves turn data and switches owner', () {
+      const playerTurn = GameTurn(
+        LetterRack(['A', 'B']),
+        owner: TurnOwner.player,
+        score: 30,
+        moves: [
+          LetterMove(
+            position: Position(2, 1),
+            letter: 'A',
+          ),
+        ],
+      );
+
+      final robotTurn = playerTurn.nextTurn();
+
+      expect(robotTurn.owner, TurnOwner.robot);
+      expect(robotTurn.rack.letters, ['A', 'B']);
+      expect(robotTurn.score, 30);
+      expect(robotTurn.moves, [
+        LetterMove(
+          position: Position(2, 1),
+          letter: 'A',
+        ),
+      ]);
+    });
+
   /// Fim do Group 
   });
 }

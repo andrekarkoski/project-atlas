@@ -36,3 +36,8 @@ export 'src/scoring/word_completion_checker.dart';
 export 'src/game/letter_move_applier.dart';
 export 'src/game/letter_rack.dart';
 export 'src/game/game_turn.dart';
+export 'src/game/game_move_result.dart';
+
+export 'src/ai/robot_player.dart';
+
+export 'src/core/enums/turn_owner.dart';

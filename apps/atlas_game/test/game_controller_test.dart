@@ -226,14 +226,567 @@ void main() {
         move,
       );
 
-      expect(updatedTurn.rack.letters, [
+      expect(updatedTurn.turn.rack.letters, [
         'T',
         'L',
       ]);
 
-      expect(updatedTurn.moves, [
+      expect(updatedTurn.turn.moves, [
         move,
       ]);
     });
+
+    test('adds 10 points for a correct letter move', () {
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const turn = GameTurn(
+        LetterRack(['A']),
+      );
+
+      const move = LetterMove(
+        position: Position(2, 0),
+        letter: 'A',
+      );
+
+      final result = controller.applyMove(
+        board,
+        turn,
+        move,
+      );
+
+      expect(result.turn.score, 10);
+    });
+
+    test('adds 20 bonus points when a move completes a word', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      const turn = GameTurn(
+        LetterRack(['T']),
+      );
+
+      const move = LetterMove(
+        position: Position(2, 1),
+        letter: 'T',
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(board, turn, move);
+
+      expect(result.turn.score, 30);
+    });
+
+    test('adds 20 bonus points for each word completed by the move', () {
+      const firstPlacement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      const secondPlacement = WordPlacement(
+        word: Word('TA'),
+        position: Position(2, 1),
+        direction: Direction.down,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+          firstPlacement,
+          secondPlacement,
+        ],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(3, 1),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      const turn = GameTurn(
+        LetterRack(['T']),
+      );
+
+      const move = LetterMove(
+        position: Position(2, 1),
+        letter: 'T',
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(board, turn, move);
+
+      expect(result.turn.score, 50);
+    });
+
+    test('subtracts 10 points for an incorrect letter move', () {
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const turn = GameTurn(
+        LetterRack(['B']),
+      );
+
+      const move = LetterMove(
+        position: Position(2, 0),
+        letter: 'B',
+      );
+
+      final result = controller.applyMove(
+        board,
+        turn,
+        move,
+      );
+
+      expect(result.turn.score, -10);
+    });
+
+    test('applies the move to the board and turn', () {
+      const controller = GameController();
+
+      final board = controller.createInitialBoard();
+
+      final position = board.placements.first.position;
+      final letter = board.expectedLetterAt(position)!;
+
+      final turn = GameTurn(
+        LetterRack([letter]),
+      );
+
+      final move = LetterMove(
+        position: position,
+        letter: letter,
+      );
+
+      expect(
+        board.expectedLetterAt(position),
+        letter,
+      );
+
+      expect(
+        board.cellAt(position).isBlocked,
+        isFalse,
+      );
+
+      expect(
+        board.cellAt(position).isLocked,
+        isFalse,
+      );
+
+      final result = controller.applyMove(
+        board,
+        turn,
+        move,
+      );
+
+      expect(result.board.cellAt(position).letter, letter);
+      expect(result.turn.moves, contains(move));
+    });
+
+    test('does not apply a letter move when the letter is not in the rack', () {
+      const placement = WordPlacement(
+        word: Word('ATLAS'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const turn = GameTurn(
+        LetterRack(['A', 'T']),
+      );
+
+      const move = LetterMove(
+        position: Position(2, 2),
+        letter: 'L',
+      );
+
+      final result = controller.applyMove(
+        board,
+        turn,
+        move,
+      );
+
+      expect(result.board.cellAt(move.position).isEmpty, isTrue);
+      expect(result.turn.moves, isEmpty);
+      expect(result.turn.rack.letters, [
+        'A',
+        'T',
+      ]);
+    });
+
+    test('does not apply a move to a completed word', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 1),
+          letter: 'T',
+          state: CellState.filled,
+        ),
+      );
+
+      const turn = GameTurn(
+        LetterRack(['A']),
+      );
+
+      const move = LetterMove(
+        position: Position(2, 0),
+        letter: 'A',
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(board, turn, move);
+
+      expect(result.turn.score, 0);
+      expect(result.turn.moves, isEmpty);
+      expect(result.turn.rack.letters, ['A']);
+      expect(result.board.cellAt(Position(2, 0)).letter, 'A');
+    });
+
+    test('applies a robot turn using RobotPlayer', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      const turn = GameTurn(
+        LetterRack(['T']),
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyRobotTurn(board, turn);
+
+      expect(result.board.cellAt(Position(2, 1)).letter, 'T');
+      expect(result.turn.rack.letters, isEmpty);
+      expect(result.turn.score, 30);
+      expect(result.turn.moves, [
+        LetterMove(
+          position: Position(2, 1),
+          letter: 'T',
+        ),
+      ]);
+    });
+
+    test('does nothing when robot has no valid move', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const turn = GameTurn(
+        LetterRack(['Z']),
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyRobotTurn(board, turn);
+
+      expect(result.board, board);
+      expect(result.turn, turn);
+    });
+
+    test('applies completion bonus for each word completed by robot move', () {
+      const horizontal = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      const vertical = WordPlacement(
+        word: Word('BT'),
+        position: Position(1, 1),
+        direction: Direction.down,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+          horizontal,
+          vertical,
+        ],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(1, 1),
+          letter: 'B',
+          state: CellState.filled,
+        ),
+      );
+
+      const turn = GameTurn(
+        LetterRack(['T']),
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyRobotTurn(board, turn);
+
+      expect(result.board.cellAt(Position(2, 1)).letter, 'T');
+      expect(result.turn.rack.letters, isEmpty);
+      expect(result.turn.score, 50);
+      expect(result.turn.moves, [
+        LetterMove(
+          position: Position(2, 1),
+          letter: 'T',
+        ),
+      ]);
+    });
+
+    test('robot move removes only the letter used from the rack', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      const turn = GameTurn(
+        LetterRack(['T', 'A', 'Z']),
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyRobotTurn(board, turn);
+
+      expect(result.board.cellAt(Position(2, 1)).letter, 'T');
+      expect(result.turn.rack.letters, ['A', 'Z']);
+      expect(result.turn.score, 30);
+    });
+
+
+    test('robot turn does not change score or rack when no move is available', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const turn = GameTurn(
+        LetterRack(['Z', 'X']),
+        score: 40,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyRobotTurn(board, turn);
+
+      expect(result.board, board);
+      expect(result.turn.rack.letters, ['Z', 'X']);
+      expect(result.turn.score, 40);
+      expect(result.turn.moves, isEmpty);
+    });
+
+    test('player move passes the turn to the robot', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['T']),
+      );
+
+      const controller = GameController();
+
+      final playerResult = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(2, 1),
+          letter: 'T',
+        ),
+      );
+
+      board = playerResult.board;
+
+      expect(board.cellAt(Position(2, 1)).letter, 'T');
+      expect(playerResult.turn.rack.letters, isEmpty);
+      expect(playerResult.turn.score, 10);
+    });
+
+    test('valid move passes the turn to the next owner', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['T']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(2, 1),
+          letter: 'T',
+        ),
+      );
+
+      expect(result.turn.owner, TurnOwner.robot);
+    });
+
+    test('robot move passes the turn back to the player', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      const robotTurn = GameTurn(
+        LetterRack(['T']),
+        owner: TurnOwner.robot,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyRobotTurn(board, robotTurn);
+
+      expect(result.board.cellAt(Position(2, 1)).letter, 'T');
+      expect(result.turn.owner, TurnOwner.player);
+    });
+
+  /// Fim do Group
   });
 }

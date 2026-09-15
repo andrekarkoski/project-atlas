@@ -5,11 +5,13 @@ final class GameController {
     this.validator = const LetterMoveValidator(),
     this.applier = const LetterMoveApplier(),
     this.scorer = const LetterMoveScorer(),
+    this.robotPlayer = const RobotPlayer(),
   });
 
   final LetterMoveValidator validator;
   final LetterMoveApplier applier;
   final LetterMoveScorer scorer;
+  final RobotPlayer robotPlayer;
 
   Board applyLetterMove(
     Board board,
@@ -34,12 +36,25 @@ final class GameController {
 
     const size = BoardSize(rows: 10, columns: 10);
 
-    return generator.generate(size, [
+    final generatedBoard = generator.generate(size, [
       Word('ATLAS'),
       Word('LASER'),
       Word('LETRA'),
       Word('REDE'),
     ]);
+
+    var board = generatedBoard;
+
+    for (final cell in generatedBoard.filledCells) {
+      board = board.setCell(
+        cell.copyWith(
+          letter: null,
+          state: CellState.empty,
+        ),
+      );
+    }
+
+    return board;
   }
 
   Board placeLetter(Board board, Position position, String letter) {
@@ -95,20 +110,62 @@ final class GameController {
     return null;
   }
 
-  GameTurn applyMove(
+  GameMoveResult applyMove(
     Board board,
     GameTurn turn,
     LetterMove move,
   ) {
-    if (!validator.isValid(board, move)) {
-      return turn;
+    if (!turn.rack.letters.contains(move.letter)) {
+      return GameMoveResult(
+        board: board,
+        turn: turn,
+      );
     }
 
-    applier.apply(board, move);
+    if (validator.isCompletedWordMove(board, move)) {
+      return GameMoveResult(
+        board: board,
+        turn: turn,
+      );
+    }
 
-    return turn
-        .removeLetter(move.letter)
-        .addMove(move);
+    if (!validator.isValid(board, move)) {
+      return GameMoveResult(
+        board: board,
+        turn: turn.addScore(scorer.score(board, move)),
+      );
+    }
+
+    final updatedBoard = applier.apply(board, move);
+
+    final score = scorer.score(board, move);
+
+    final updatedTurn = turn
+      .removeLetter(move.letter)
+      .addMove(move)
+      .addScore(score)
+      .nextTurn();
+
+    return GameMoveResult(
+      board: updatedBoard,
+      turn: updatedTurn,
+    );
+  }
+
+  GameMoveResult applyRobotTurn(
+    Board board,
+    GameTurn turn,
+  ) {
+    final move = robotPlayer.chooseMove(board, turn);
+
+    if (move == null) {
+      return GameMoveResult(
+        board: board,
+        turn: turn,
+      );
+    }
+
+    return applyMove(board, turn, move);
   }
 
   /// Fim
