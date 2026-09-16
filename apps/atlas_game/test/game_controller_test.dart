@@ -787,6 +787,219 @@ void main() {
       expect(result.turn.owner, TurnOwner.player);
     });
 
+    test('valid move removes the used letter from the rack', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['A', 'T']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(2, 0),
+          letter: 'A',
+        ),
+      );
+
+      expect(result.turn.rack.letters, ['T']);
+    });
+
+    test('invalid move keeps the letter in the rack', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['Z']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(2, 0),
+          letter: 'Z',
+        ),
+      );
+
+      expect(result.turn.rack.letters, ['Z']);
+    });
+
+    test('invalid move keeps the board unchanged', () {
+      const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['Z']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(2, 0),
+          letter: 'Z',
+        ),
+      );
+
+      expect(result.board.cellAt(const Position(2, 0)).letter, isNull);
+    });
+
+    test('valid move awards completion bonus for each completed word', () {
+      const horizontal = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      const vertical = WordPlacement(
+        word: Word('AT'),
+        position: Position(1, 1),
+        direction: Direction.down,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+          horizontal,
+          vertical,
+        ],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(1, 1),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['T']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(2, 1),
+          letter: 'T',
+        ),
+      );
+
+      expect(result.turn.score, 50);
+    });
+
+    test('valid move does not award a second bonus for an already completed word', () {
+      const completedWord = WordPlacement(
+        word: Word('AT'),
+        position: Position(0, 0),
+        direction: Direction.right,
+      );
+
+      const incompleteWord = WordPlacement(
+        word: Word('AT'),
+        position: Position(2, 0),
+        direction: Direction.right,
+      );
+
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+          completedWord,
+          incompleteWord,
+        ],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 1),
+          letter: 'T',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['T']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(2, 1),
+          letter: 'T',
+        ),
+      );
+
+      expect(result.turn.score, 30);
+    });
+
   /// Fim do Group
   });
 }
