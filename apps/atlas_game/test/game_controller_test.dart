@@ -1000,6 +1000,135 @@ void main() {
       expect(result.turn.score, 30);
     });
 
-  /// Fim do Group
+    test('applies multiple valid letter moves in one turn', () {
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: const [
+          WordPlacement(
+            word: Word('AT'),
+            position: Position(0, 0),
+            direction: Direction.right,
+          ),
+        ],
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['A', 'T']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final firstResult = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(0, 0),
+          letter: 'A',
+        ),
+      );
+
+      board = firstResult.board;
+
+      final secondResult = controller.applyMove(
+        board,
+        firstResult.turn,
+        const LetterMove(
+          position: Position(0, 1),
+          letter: 'T',
+        ),
+      );
+
+      expect(secondResult.board.cellAt(const Position(0, 0)).letter, 'A');
+      expect(secondResult.board.cellAt(const Position(0, 1)).letter, 'T');
+      expect(secondResult.turn.score, 40);
+      expect(secondResult.turn.rack.letters, isEmpty);
+    });
+
+    test('invalid move keeps the letter in the rack and the board unchanged', () {
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: const [
+          WordPlacement(
+            word: Word('AT'),
+            position: Position(0, 0),
+            direction: Direction.right,
+          ),
+        ],
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['X']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(0, 0),
+          letter: 'X',
+        ),
+      );
+
+      expect(result.board.cellAt(const Position(0, 0)).letter, isNull);
+      expect(result.turn.rack.letters, ['X']);
+      expect(result.turn.score, -10);
+      expect(result.turn.owner, TurnOwner.player);
+    });
+
+    test('completed word cell cannot be played again', () {
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: const [
+          WordPlacement(
+            word: Word('AT'),
+            position: Position(0, 0),
+            direction: Direction.right,
+          ),
+        ],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 1),
+          letter: 'T',
+          state: CellState.filled,
+        ),
+      );
+
+      const playerTurn = GameTurn(
+        LetterRack(['A']),
+        owner: TurnOwner.player,
+      );
+
+      const controller = GameController();
+
+      final result = controller.applyMove(
+        board,
+        playerTurn,
+        const LetterMove(
+          position: Position(0, 0),
+          letter: 'A',
+        ),
+      );
+
+      expect(result.board.cellAt(const Position(0, 0)).letter, 'A');
+      expect(result.turn.rack.letters, ['A']);
+      expect(result.turn.score, 0);
+      expect(result.turn.owner, TurnOwner.player);
+    });
+
+  /// End Group
   });
 }
