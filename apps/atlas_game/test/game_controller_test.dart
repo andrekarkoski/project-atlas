@@ -1129,6 +1129,98 @@ void main() {
       expect(result.turn.owner, TurnOwner.player);
     });
 
+    test('game is complete when all words are completed', () {
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: const [
+          WordPlacement(
+            word: Word('AT'),
+            position: Position(0, 0),
+            direction: Direction.right,
+          ),
+          WordPlacement(
+            word: Word('NO'),
+            position: Position(2, 0),
+            direction: Direction.right,
+          ),
+        ],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 1),
+          letter: 'T',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 0),
+          letter: 'N',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(2, 1),
+          letter: 'O',
+          state: CellState.filled,
+        ),
+      );
+
+      const controller = GameController();
+
+      expect(controller.isGameComplete(board), isTrue);
+    });
+
+    test('game is not complete when a word is still incomplete', () {
+      var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: const [
+          WordPlacement(
+            word: Word('AT'),
+            position: Position(0, 0),
+            direction: Direction.right,
+          ),
+          WordPlacement(
+            word: Word('NO'),
+            position: Position(2, 0),
+            direction: Direction.right,
+          ),
+        ],
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 0),
+          letter: 'A',
+          state: CellState.filled,
+        ),
+      );
+
+      board = board.setCell(
+        const Cell(
+          position: Position(0, 1),
+          letter: 'T',
+          state: CellState.filled,
+        ),
+      );
+
+      const controller = GameController();
+
+      expect(controller.isGameComplete(board), isFalse);
+    });
+
   /// End Group
   });
 }

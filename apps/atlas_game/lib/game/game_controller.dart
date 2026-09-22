@@ -13,6 +13,18 @@ final class GameController {
   final LetterMoveScorer scorer;
   final RobotPlayer robotPlayer;
 
+  bool isGameComplete(Board board) {
+    const completionChecker = WordCompletionChecker();
+
+    for (final placement in board.placements) {
+      if (!completionChecker.isCompleted(board, placement)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   Board applyLetterMove(
     Board board,
     LetterMove move,
@@ -167,6 +179,8 @@ final class GameController {
 
     return applyMove(board, turn, move);
   }
+
+
 
   /// Fim
 }
