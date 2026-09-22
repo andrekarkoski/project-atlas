@@ -381,5 +381,91 @@ void main() {
     expect(nextState.robotScore, 20);
   });
 
+  test('GameState adds completion bonus to player score', () {
+    const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(0, 0),
+        direction: Direction.right,
+    );
+
+    var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+    );
+
+    board = board.setCell(
+        const Cell(
+        position: Position(0, 0),
+        letter: 'A',
+        state: CellState.filled,
+        ),
+    );
+
+    const turn = GameTurn(
+        LetterRack(['T']),
+        owner: TurnOwner.player,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 10,
+        robotScore: 20,
+    );
+
+    final nextState = state.applyMove(
+        const LetterMove(
+        position: Position(0, 1),
+        letter: 'T',
+        ),
+    );
+
+    expect(nextState.playerScore, 40);
+    expect(nextState.robotScore, 20);
+  });
+
+  test('GameState adds completion bonus to robot score', () {
+    const placement = WordPlacement(
+        word: Word('AT'),
+        position: Position(0, 0),
+        direction: Direction.right,
+    );
+
+    var board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [placement],
+    );
+
+    board = board.setCell(
+        const Cell(
+        position: Position(0, 0),
+        letter: 'A',
+        state: CellState.filled,
+        ),
+    );
+
+    const turn = GameTurn(
+        LetterRack(['T']),
+        owner: TurnOwner.robot,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 10,
+        robotScore: 20,
+    );
+
+    final nextState = state.applyMove(
+        const LetterMove(
+        position: Position(0, 1),
+        letter: 'T',
+        ),
+    );
+
+    expect(nextState.playerScore, 10);
+    expect(nextState.robotScore, 50);
+  });
+
   /// End Game State Tests
 }
