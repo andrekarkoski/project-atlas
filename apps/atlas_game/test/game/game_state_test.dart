@@ -311,5 +311,75 @@ void main() {
     expect(nextState.robotScore, 10);
   });
 
+  test('GameState does not change player score for an invalid move', () {
+    final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+        WordPlacement(
+            word: Word('AT'),
+            position: const Position(0, 0),
+            direction: Direction.right,
+        ),
+        ],
+    );
+
+    const turn = GameTurn(
+        LetterRack(['Z']),
+        owner: TurnOwner.player,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 30,
+        robotScore: 20,
+    );
+
+    final nextState = state.applyMove(
+        const LetterMove(
+        position: Position(0, 0),
+        letter: 'Z',
+        ),
+    );
+
+    expect(nextState.playerScore, 20);
+    expect(nextState.robotScore, 20);
+  });
+
+  test('GameState applies penalty to robot score for an invalid move', () {
+    final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+        WordPlacement(
+            word: Word('AT'),
+            position: const Position(0, 0),
+            direction: Direction.right,
+        ),
+        ],
+    );
+
+    const turn = GameTurn(
+        LetterRack(['Z']),
+        owner: TurnOwner.robot,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 20,
+        robotScore: 30,
+    );
+
+    final nextState = state.applyMove(
+        const LetterMove(
+        position: Position(0, 0),
+        letter: 'Z',
+        ),
+    );
+
+    expect(nextState.playerScore, 20);
+    expect(nextState.robotScore, 20);
+  });
+
   /// End Game State Tests
 }
