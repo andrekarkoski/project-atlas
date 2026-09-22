@@ -197,5 +197,119 @@ void main() {
     expect(nextState.turn.score, 30);
   });
 
-  /// fim 
+  test('GameState stores separate player and robot scores', () {
+    final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+    );
+
+    const turn = GameTurn(
+        LetterRack(['A']),
+        owner: TurnOwner.player,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 30,
+        robotScore: 20,
+    );
+
+    expect(state.playerScore, 30);
+    expect(state.robotScore, 20);
+  });
+
+  test('GameState preserves player and robot scores when switching turns', () {
+    final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+    );
+
+    const turn = GameTurn(
+        LetterRack(['A']),
+        owner: TurnOwner.player,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 30,
+        robotScore: 20,
+    );
+
+    final nextState = state.nextTurn();
+
+    expect(nextState.playerScore, 30);
+    expect(nextState.robotScore, 20);
+  });
+
+  test('GameState adds valid player move score to player score', () {
+    final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+          WordPlacement(
+            word: Word('AT'),
+            position: const Position(0, 0),
+            direction: Direction.right,
+          ),
+        ],
+    );
+
+    const turn = GameTurn(
+        LetterRack(['A']),
+        owner: TurnOwner.player,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 0,
+        robotScore: 0,
+    );
+
+    final nextState = state.applyMove(
+        const LetterMove(
+        position: Position(0, 0),
+        letter: 'A',
+        ),
+    );
+
+    expect(nextState.playerScore, 10);
+    expect(nextState.robotScore, 0);
+  });
+
+  test('GameState adds valid robot move score to robot score', () {
+    final board = Board(
+        size: const BoardSize(rows: 5, columns: 5),
+        placements: [
+        WordPlacement(
+            word: Word('AT'),
+            position: const Position(0, 0),
+            direction: Direction.right,
+        ),
+        ],
+    );
+
+    const turn = GameTurn(
+        LetterRack(['A']),
+        owner: TurnOwner.robot,
+    );
+
+    final state = GameState(
+        board: board,
+        turn: turn,
+        playerScore: 0,
+        robotScore: 0,
+    );
+
+    final nextState = state.applyMove(
+        const LetterMove(
+        position: Position(0, 0),
+        letter: 'A',
+        ),
+    );
+
+    expect(nextState.playerScore, 0);
+    expect(nextState.robotScore, 10);
+  });
+
+  /// End Game State Tests
 }
