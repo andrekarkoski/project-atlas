@@ -467,5 +467,26 @@ void main() {
     expect(nextState.robotScore, 50);
   });
 
+  test('GameState preserves player and robot scores after robot turn', () {
+    const turn = GameTurn(
+    LetterRack(['A']),
+    owner: TurnOwner.robot,
+    );
+
+    final state = GameState(
+    board: Board(
+        size: const BoardSize(rows: 5, columns: 5),
+    ),
+    turn: turn,
+    playerScore: 30,
+    robotScore: 40,
+    );
+
+    final nextState = state.applyRobotTurn();
+
+    expect(nextState.playerScore, 30);
+    expect(nextState.robotScore, 40);
+  });
+
   /// End Game State Tests
 }

@@ -61,8 +61,10 @@ final class GameState {
     );
 
     return GameState(
-        board: result.board,
-        turn: result.turn,
+      board: result.board,
+      turn: result.turn,
+      playerScore: playerScore,
+      robotScore: robotScore,
     );
   }
 
