@@ -488,5 +488,44 @@ void main() {
     expect(nextState.robotScore, 40);
   });
 
+  test('GameState applies robot turn and updates robot score', () {
+    const placement = WordPlacement(
+      word: Word('AT'),
+      position: Position(0, 0),
+      direction: Direction.right,
+    );
+
+    var board = Board(
+      size: const BoardSize(rows: 5, columns: 5),
+      placements: [placement],
+    );
+
+    board = board.setCell(
+      const Cell(
+        position: Position(0, 0),
+        letter: 'A',
+        state: CellState.filled,
+      ),
+    );
+
+    const turn = GameTurn(
+      LetterRack(['T']),
+      owner: TurnOwner.robot,
+    );
+
+    final state = GameState(
+      board: board,
+      turn: turn,
+      playerScore: 10,
+      robotScore: 20,
+    );
+
+    final nextState = state.applyRobotTurn();
+
+    expect(nextState.robotScore, 50);
+    expect(nextState.playerScore, 10);
+    expect(nextState.turn.owner, TurnOwner.player);
+  });
+
   /// End Game State Tests
 }

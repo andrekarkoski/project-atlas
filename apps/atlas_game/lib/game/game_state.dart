@@ -56,15 +56,17 @@ final class GameState {
     const controller = GameController();
 
     final result = controller.applyRobotTurn(
-        board,
-        turn,
+      board,
+      turn,
     );
+
+    final points = result.turn.score - turn.score;
 
     return GameState(
       board: result.board,
       turn: result.turn,
       playerScore: playerScore,
-      robotScore: robotScore,
+      robotScore: robotScore + points,
     );
   }
 
